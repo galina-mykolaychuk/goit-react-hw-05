@@ -8,16 +8,19 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react"; // Додано useRef
 import axios from "axios";
 import styles from "./MovieDetailsPage.module.css";
 
 const MovieDetailsPage = () => {
   const { movieId } = useParams();
   const [movie, setMovie] = useState(null);
-  const [error, setError] = useState(null); // Додано для обробки помилок
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Додаємо useRef для збереження значення location.state
+  const prevLocationRef = useRef(location.state?.from || "/movies"); // Використовуємо useRef для збереження початкового стану
 
   useEffect(() => {
     const fetchMovieDetails = async () => {
@@ -33,7 +36,7 @@ const MovieDetailsPage = () => {
         );
         setMovie(response.data);
       } catch (err) {
-        setError(true); // Встановлюємо помилку, якщо запит не вдався
+        setError(true);
       }
     };
 
@@ -41,12 +44,11 @@ const MovieDetailsPage = () => {
   }, [movieId]);
 
   const handleGoBack = () => {
-    const from = location.state?.from || "/movies";
-    navigate(from);
+    navigate(prevLocationRef.current); // Використовуємо значення з useRef для повернення
   };
 
   if (error) {
-    return <Navigate to="/404" />; // Перенаправлення на NotFoundPage
+    return <Navigate to="/404" />;
   }
 
   if (!movie) return null;
@@ -76,10 +78,14 @@ const MovieDetailsPage = () => {
       <div className={styles.additionalInfo}>
         <h2>Additional information</h2>
         <nav className={styles.navLinks}>
-          <Link to="cast" state={{ from: location.state?.from }}>
+          <Link to="cast" state={{ from: prevLocationRef.current }}>
+            {" "}
+            {/* Передаємо стан з useRef */}
             Cast
           </Link>
-          <Link to="reviews" state={{ from: location.state?.from }}>
+          <Link to="reviews" state={{ from: prevLocationRef.current }}>
+            {" "}
+            {/* Передаємо стан з useRef */}
             Reviews
           </Link>
         </nav>
